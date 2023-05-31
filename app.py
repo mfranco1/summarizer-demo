@@ -1,28 +1,24 @@
 import streamlit as st
-from streamlit.runtime.uploaded_file_manager import UploadedFile
 from tenacity import RetryError
 
 import tts
+from converter import speech_to_text
 from explainer import retrieve_text_explanation
+from st_custom_components import st_audiorec
 
 
 def display_header() -> None:
-    st.title("Text Summarizer")
-    st.text("Upload your text or copy and paste in the field below")
+    st.title("CAMS: Clinical Assistant Medical Scribe")
+    st.text("Record your consultation session below")
 
-def display_widgets() -> tuple[UploadedFile, str]:
-    file = st.file_uploader("Upload your text here.")
-    text = st.text_area("Or copy and paste your text here (press Ctrl + Enter to send)")
-    return file, text
-
-def retrieve_content_from_file(file: UploadedFile) -> str:
-    return file.getvalue().decode("utf8")
+def display_widgets() -> str:
+    wav_audio_data = st_audiorec()
+    if wav_audio_data is not None:
+        return speech_to_text()
+    return ""
 
 def extract_text() -> str:
-    uploaded_text, pasted_text = display_widgets()
-    if uploaded_text:
-        return retrieve_content_from_file(uploaded_text)
-    return pasted_text or ""
+    return display_widgets()
 
 def choose_voice():
     voices = tts.list_available_names()
@@ -37,7 +33,7 @@ def main() -> None:
             try:
                 explanation = retrieve_text_explanation(text=text_to_explain)
             except RetryError:
-                st.warning("Couldn't access AI. Proceeding to text-to-speech")
+                st.warning("Couldn't access API. Proceeding to text-to-speech")
                 explanation = text_to_explain
                 summary_worked = False
         with st.spinner(text="Converting to audio..."):
@@ -47,10 +43,10 @@ def main() -> None:
                 mp3_filename=audio_file_name,
             )
         if summary_worked:
-            st.success("Here's a summary of your text")
+            st.success("Here's a summary of your recording")
         else:
             st.warning("Summarizer might be offline")
-        st.markdown(f"**Explanation:** {explanation}")
+        st.markdown(f"**Summary Report:** {explanation}")
         st.audio(audio_file_name)
 
 

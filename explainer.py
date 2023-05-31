@@ -30,5 +30,8 @@ def get_text_info(question: str, text: str) -> str:
 
 retrieve_text_explanation = partial(
     get_text_info,
-    question=("Can you summarize the meaning of this text in a few words?"),
+    question=(
+        "Can you summarize this conversation with a patient into a clinical report? "
+        "Use appropriate medical terms"
+    ),
 )

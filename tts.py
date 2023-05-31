@@ -40,7 +40,8 @@ def convert_text_to_mp3(message: str, voice_name: str, mp3_filename: str) -> Non
     voice_id = _get_id_from_name(response=voices_response, name=voice_name)
 
     payload = {
-        "text": message,
+        # Character limit for this API is 330
+        "text": message[:330] if len(message) > 330 else message,
         "voice_settings": {"stability": 0.75, "similarity_boost": 0.75},
     }
     text_to_speech_response = tts_response(voice_id=voice_id, payload=payload)
